@@ -5,7 +5,6 @@ const baseUrl = `https://pixabay.com/api/?key=${apiKey}&image_type=photo&orienta
 
 const fetchImages = async (query, page) => {
   try {
-    console.log('Fetching images with query:', query, 'and page:', page);
     const response = await axios.get(`${baseUrl}&q=${query}&page=${page}`);
     const newImages = response.data.hits.map(image => ({
       id: image.id,

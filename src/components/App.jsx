@@ -1,5 +1,3 @@
-// App.jsx
-
 import React, { Component } from 'react';
 import Searchbar from './Searchbar/SearchBar';
 import ImageGallery from './ImageGallery/ImageGallery';
@@ -17,7 +15,6 @@ class App extends Component {
       query: '',
       page: 1,
       loading: false,
-      showButton: false,
       largeImageURL: '',
       showModal: false,
       hasMoreImages: true,
@@ -29,11 +26,14 @@ class App extends Component {
       query: newQuery,
       page: 1,
       images: [],
+      lastSearch: newQuery,
     });
   };
-
+  handleInitialLoad = () => {
+    this.fetchImages();
+  };
   handleLoadMore = () => {
-    const { hasMoreImages, query } = this.state;
+    const { hasMoreImages, lastSearch } = this.state;
 
     if (!hasMoreImages) {
       return;
@@ -42,10 +42,13 @@ class App extends Component {
     this.setState(
       prevState => ({
         page: prevState.page + 1,
+        loading: true,
       }),
       () => {
-        if (query) {
-          this.fetchImages();
+        if (lastSearch) {
+          this.fetchImages(lastSearch, this.state.page);
+        } else {
+          this.handleInitialLoad();
         }
       }
     );
@@ -66,26 +69,26 @@ class App extends Component {
   };
 
   componentDidMount() {
-    this.fetchImages();
+    if (this.state.page === 1 && this.state.query) {
+      this.fetchImages();
+    }
+    this.handleInitialLoad();
   }
 
   componentDidUpdate(_, prevState) {
-    if (
-      prevState.query !== this.state.query ||
-      prevState.page !== this.state.page
-    ) {
+    const { query, page, loading } = this.state;
+
+    if (prevState.query === query && prevState.page === page) {
+      return;
+    }
+
+    if (!loading) {
       this.fetchImages();
     }
   }
 
-  fetchImages = async () => {
-    const { query, page } = this.state;
-
+  fetchImages = async (query = this.state.query, page = this.state.page) => {
     try {
-      this.setState({
-        loading: true,
-      });
-
       const newImages = await fetchImages(query, page);
       this.setState(prevState => ({
         images: [
